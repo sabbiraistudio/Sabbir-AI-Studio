@@ -1,3 +1,5 @@
+import os
+
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -13,6 +15,7 @@ from PySide6.QtWidgets import (
 
 from core.logger import Logger
 from core.csv_reader import CSVReader
+from providers.pollinations import Pollinations
 
 
 class MainWindow(QMainWindow):
@@ -107,6 +110,7 @@ class MainWindow(QMainWindow):
         self.logger = Logger(self.log_box)
 
         self.csv_reader = CSVReader()
+        self.pollinations = Pollinations()
 
     # =====================================================
     # Browse Prompt File
@@ -152,17 +156,46 @@ class MainWindow(QMainWindow):
         self.logger.write("Generation Started...\n")
 
         csv_file = self.prompt_path.text()
+        output_folder = self.output_path.text()
+
+        if not output_folder:
+
+            self.logger.write("No Output Folder Selected!")
+            return
 
         if not csv_file:
 
             self.logger.write("No Prompt File Selected!")
             return
 
-        prompts = self.csv_reader.read_prompts(csv_file)
+        items = self.csv_reader.read_prompts(csv_file)
 
-        self.logger.write(f"Loaded {len(prompts)} prompts.\n")
+        if not items:
 
-        for index, prompt in enumerate(prompts, start=1):
-            self.logger.write(f"{index}. {prompt}")
+            self.logger.write("No prompts found in CSV!")
+            return
+
+        self.logger.write(f"Loaded {len(items)} prompts.\n")
+
+        for index, item in enumerate(items, start=1):
+
+            self.logger.write(
+                f"{index}. {item['filename']} -> {item['prompt']}"
+            )
 
         self.progress.setValue(100)
+        filename = items[0]["filename"] + ".png"
+
+        save_path = os.path.join(output_folder, filename)
+
+        self.logger.write(f"Generating {filename}...")
+
+        success = self.pollinations.download_image(
+            items[0]["prompt"],
+            save_path
+        )
+
+        if success:
+            self.logger.write("✅ First image generated successfully.")
+        else:
+            self.logger.write("❌ Failed to generate image.")
