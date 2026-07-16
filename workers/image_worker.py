@@ -6,6 +6,7 @@ class ImageWorker(QObject):
     log = Signal(str)
     progress = Signal(int)
     finished = Signal()
+    error = Signal(str)
 
     def __init__(self, csv_reader, pollinations, csv_file, output_folder):
         super().__init__()
