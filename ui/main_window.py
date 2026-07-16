@@ -159,43 +159,43 @@ class MainWindow(QMainWindow):
         output_folder = self.output_path.text()
 
         if not output_folder:
-
             self.logger.write("No Output Folder Selected!")
             return
 
         if not csv_file:
-
             self.logger.write("No Prompt File Selected!")
             return
 
         items = self.csv_reader.read_prompts(csv_file)
 
         if not items:
-
-            self.logger.write("No prompts found in CSV!")
+            self.logger.write("No prompts found!")
             return
 
-        self.logger.write(f"Loaded {len(items)} prompts.\n")
+        total = len(items)
+
+        self.progress.setValue(0)
 
         for index, item in enumerate(items, start=1):
 
+            filename = item["filename"] + ".png"
+            save_path = os.path.join(output_folder, filename)
+
             self.logger.write(
-                f"{index}. {item['filename']} -> {item['prompt']}"
+                f"[{index}/{total}] Generating {filename}"
             )
 
-        self.progress.setValue(100)
-        filename = items[0]["filename"] + ".png"
+            success = self.pollinations.download_image(
+                item["prompt"],
+                save_path
+            )
 
-        save_path = os.path.join(output_folder, filename)
+            if success:
+                self.logger.write(f"✅ Saved: {filename}")
+            else:
+                self.logger.write(f"❌ Failed: {filename}")
 
-        self.logger.write(f"Generating {filename}...")
+            progress = int((index / total) * 100)
+            self.progress.setValue(progress)
 
-        success = self.pollinations.download_image(
-            items[0]["prompt"],
-            save_path
-        )
-
-        if success:
-            self.logger.write("✅ First image generated successfully.")
-        else:
-            self.logger.write("❌ Failed to generate image.")
+        self.logger.write("\n🎉 All images generated successfully.")

@@ -1,3 +1,4 @@
+import time
 import requests
 import urllib.parse
 
@@ -16,13 +17,30 @@ class Pollinations:
 
         url = self.generate_url(prompt)
 
-        response = requests.get(url, timeout=120)
+        headers = {
+            "User-Agent": "Sabbir-AI-Studio/1.0"
+        }
 
-        if response.status_code == 200:
+        for attempt in range(3):
 
-            with open(save_path, "wb") as file:
-                file.write(response.content)
+            try:
 
-            return True
+                response = requests.get(
+                    url,
+                    headers=headers,
+                    timeout=120
+                )
+
+                if response.status_code == 200:
+
+                    with open(save_path, "wb") as file:
+                        file.write(response.content)
+
+                    return True
+
+            except requests.RequestException:
+                pass
+
+            time.sleep(2)
 
         return False
