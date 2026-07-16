@@ -13,7 +13,7 @@ class CSVReader:
 
             for row in reader:
 
-                prompt = row.get("prompt", "").strip()
+                prompt = row.get("Prompt", "").strip()
 
                 if prompt:
                     prompts.append(prompt)

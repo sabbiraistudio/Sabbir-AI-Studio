@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.logger import Logger
+from core.csv_reader import CSVReader
 
 
 class MainWindow(QMainWindow):
@@ -105,6 +106,8 @@ class MainWindow(QMainWindow):
         # Logger
         self.logger = Logger(self.log_box)
 
+        self.csv_reader = CSVReader()
+
     # =====================================================
     # Browse Prompt File
     # =====================================================
@@ -143,7 +146,23 @@ class MainWindow(QMainWindow):
 
     def start_generation(self):
 
+        self.logger.clear()
+
         self.logger.write("====================================")
-        self.logger.write("Generation Started...")
-        self.logger.write("Ready for next step.")
-        self.progress.setValue(5)
+        self.logger.write("Generation Started...\n")
+
+        csv_file = self.prompt_path.text()
+
+        if not csv_file:
+
+            self.logger.write("No Prompt File Selected!")
+            return
+
+        prompts = self.csv_reader.read_prompts(csv_file)
+
+        self.logger.write(f"Loaded {len(prompts)} prompts.\n")
+
+        for index, prompt in enumerate(prompts, start=1):
+            self.logger.write(f"{index}. {prompt}")
+
+        self.progress.setValue(100)
